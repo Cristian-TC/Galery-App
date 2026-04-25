@@ -1,0 +1,22 @@
+R_DEF: Internal format may change without notice
+local
+color purple_40
+color purple_80
+color teal_40
+color teal_80
+string all_regions
+string app_name
+string cta_filters
+string empty_message
+string empty_title
+string photo_from
+string region_africa
+string region_americas
+string region_asia
+string region_europe
+string region_oceania
+string search_hint
+string visitors
+style Theme.GaleryApp
+xml backup_rules
+xml data_extraction_rules

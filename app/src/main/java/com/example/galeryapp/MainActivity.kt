@@ -1,167 +1,138 @@
 package com.example.galeryapp
 
+import android.Manifest
+import android.content.ContentUris
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.TravelExplore
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberAsyncImagePainter
 
 class MainActivity : ComponentActivity() {
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        // Handle permission result
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MaterialTheme {
-                MultinationalGalleryScreen()
+            GalleryApp()
+        }
+    }
+
+    @Composable
+    fun GalleryApp() {
+        val navController = rememberNavController()
+        val context = LocalContext.current
+
+        // Request permission if needed
+        LaunchedEffect(Unit) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
+            }
+        }
+
+        MaterialTheme {
+            NavHost(navController = navController, startDestination = "gallery") {
+                composable("gallery") { GalleryScreen(navController) }
+                composable("vault") { VaultScreen(navController) }
             }
         }
     }
 }
 
-data class GalleryItem(
-    val country: String,
-    val city: String,
-    val location: String,
-    val region: Region,
-    val yearlyVisitors: String,
-    val imageUrl: String,
-    val author: String
-)
+data class PhotoItem(val uri: Uri, val id: Long)
 
-enum class Region {
-    EUROPE, AMERICAS, ASIA, AFRICA, OCEANIA
-}
-
-private val galleryItems = listOf(
-    GalleryItem("España", "Barcelona", "Sagrada Familia", Region.EUROPE, "4.7 M", "https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=1000&q=80", "Nicolas Vigier"),
-    GalleryItem("Francia", "París", "Torre Eiffel", Region.EUROPE, "6.2 M", "https://images.unsplash.com/photo-1431274172761-fca41d930114?auto=format&fit=crop&w=1000&q=80", "Pedro Lastra"),
-    GalleryItem("México", "Chichén Itzá", "Pirámide de Kukulkán", Region.AMERICAS, "2.6 M", "https://images.unsplash.com/photo-1585464231875-d9ef1f5ad396?auto=format&fit=crop&w=1000&q=80", "Bhargava Marripati"),
-    GalleryItem("Estados Unidos", "Nueva York", "Puente de Brooklyn", Region.AMERICAS, "30 M", "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1000&q=80", "Luca Bravo"),
-    GalleryItem("Japón", "Kioto", "Fushimi Inari", Region.ASIA, "3.0 M", "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?auto=format&fit=crop&w=1000&q=80", "Sorasak"),
-    GalleryItem("India", "Agra", "Taj Mahal", Region.ASIA, "7.5 M", "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1000&q=80", "Sylwia Bartyzel"),
-    GalleryItem("Marruecos", "Marrakech", "Medina de Marrakech", Region.AFRICA, "3.2 M", "https://images.unsplash.com/photo-1597212618440-806262de4f6b?auto=format&fit=crop&w=1000&q=80", "Calin Stan"),
-    GalleryItem("Egipto", "Giza", "Pirámides de Giza", Region.AFRICA, "14 M", "https://images.unsplash.com/photo-1539650116574-75c0c6d73f74?auto=format&fit=crop&w=1000&q=80", "Spencer Davis"),
-    GalleryItem("Australia", "Sídney", "Ópera de Sídney", Region.OCEANIA, "10.9 M", "https://images.unsplash.com/photo-1523482580672-f109ba8cb9be?auto=format&fit=crop&w=1000&q=80", "Caleb"),
-    GalleryItem("Nueva Zelanda", "Milford Sound", "Fiordos de Milford", Region.OCEANIA, "1.0 M", "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1000&q=80", "Sebastian Pena Lambarri")
-)
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MultinationalGalleryScreen() {
-    var searchText by remember { mutableStateOf("") }
-    var selectedRegion by remember { mutableStateOf<Region?>(null) }
+fun GalleryScreen(navController: NavController) {
+    val context = LocalContext.current
+    val photos = remember { mutableStateListOf<PhotoItem>() }
+    val hiddenPhotos = remember { mutableStateListOf<PhotoItem>() }
+    val prefs = context.getSharedPreferences("gallery_prefs", Context.MODE_PRIVATE)
 
-    val filteredItems = remember(searchText, selectedRegion) {
-        galleryItems.filter { item ->
-            val matchesSearch = searchText.isBlank() ||
-                item.country.contains(searchText, ignoreCase = true) ||
-                item.city.contains(searchText, ignoreCase = true) ||
-                item.location.contains(searchText, ignoreCase = true)
-            val matchesRegion = selectedRegion == null || item.region == selectedRegion
-            matchesSearch && matchesRegion
-        }
+    LaunchedEffect(Unit) {
+        loadPhotos(context, photos, hiddenPhotos, prefs)
     }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(text = stringResource(id = R.string.app_name)) },
-                navigationIcon = {
-                    Icon(
-                        imageVector = Icons.Outlined.TravelExplore,
-                        contentDescription = null,
-                        modifier = Modifier.padding(start = 16.dp)
-                    )
+                title = { Text("Galería") },
+                actions = {
+                    IconButton(onClick = { navController.navigate("vault") }) {
+                        Icon(Icons.Filled.Lock, contentDescription = "Bóveda Oculta")
+                    }
                 }
             )
         }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) { padding ->
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 120.dp),
+            contentPadding = PaddingValues(8.dp),
+            modifier = Modifier.padding(padding)
         ) {
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = { searchText = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                placeholder = { Text(stringResource(id = R.string.search_hint)) },
-                singleLine = true
-            )
-
-            Text(
-                text = stringResource(id = R.string.cta_filters),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                AssistChip(
-                    onClick = { selectedRegion = null },
-                    label = { Text(stringResource(id = R.string.all_regions)) }
-                )
-                Region.entries.forEach { region ->
-                    AssistChip(
-                        onClick = { selectedRegion = region },
-                        label = { Text(region.toLabel()) }
-                    )
-                }
-            }
-
-            if (filteredItems.isEmpty()) {
-                EmptyState(modifier = Modifier.fillMaxWidth())
-            } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 220.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+            items(photos) { photo ->
+                Card(
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .aspectRatio(1f)
+                        .clickable {
+                            // Toggle hide
+                            if (hiddenPhotos.contains(photo)) {
+                                hiddenPhotos.remove(photo)
+                                prefs.edit().remove(photo.id.toString()).apply()
+                            } else {
+                                hiddenPhotos.add(photo)
+                                prefs.edit().putBoolean(photo.id.toString(), true).apply()
+                            }
+                        },
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
-                    items(filteredItems) { item ->
-                        GalleryCard(item = item)
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Image(
+                            painter = rememberAsyncImagePainter(photo.uri),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        if (hiddenPhotos.contains(photo)) {
+                            Icon(
+                                Icons.Filled.Lock,
+                                contentDescription = "Oculto",
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
                     }
                 }
             }
@@ -169,70 +140,150 @@ fun MultinationalGalleryScreen() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Region.toLabel(): String = when (this) {
-    Region.EUROPE -> stringResource(id = R.string.region_europe)
-    Region.AMERICAS -> stringResource(id = R.string.region_americas)
-    Region.ASIA -> stringResource(id = R.string.region_asia)
-    Region.AFRICA -> stringResource(id = R.string.region_africa)
-    Region.OCEANIA -> stringResource(id = R.string.region_oceania)
-}
+fun VaultScreen(navController: NavController) {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("gallery_prefs", Context.MODE_PRIVATE)
+    var pin by remember { mutableStateOf("") }
+    var isAuthenticated by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(true) }
+    val storedPin = prefs.getString("pin", null)
+    val hiddenPhotos = remember { mutableStateListOf<PhotoItem>() }
 
-@Composable
-fun GalleryCard(item: GalleryItem) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        AsyncImage(
-            model = item.imageUrl,
-            contentDescription = "${item.location} - ${item.country}",
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(140.dp),
-            contentScale = ContentScale.Crop
+    if (storedPin == null) {
+        // Set up PIN
+        AlertDialog(
+            onDismissRequest = { navController.popBackStack() },
+            title = { Text("Configurar PIN") },
+            text = {
+                OutlinedTextField(
+                    value = pin,
+                    onValueChange = { pin = it },
+                    label = { Text("PIN") },
+                    visualTransformation = PasswordVisualTransformation()
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    if (pin.isNotEmpty()) {
+                        prefs.edit().putString("pin", pin).apply()
+                        showDialog = false
+                        isAuthenticated = true
+                    }
+                }) {
+                    Text("Guardar")
+                }
+            }
         )
-        Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(item.location, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("${item.city}, ${item.country}", style = MaterialTheme.typography.bodyMedium)
-            Text(
-                text = stringResource(R.string.visitors, item.yearlyVisitors),
-                style = MaterialTheme.typography.bodySmall
-            )
-            Text(
-                text = stringResource(id = R.string.photo_from, item.author),
-                style = MaterialTheme.typography.labelSmall
-            )
+    } else if (!isAuthenticated) {
+        AlertDialog(
+            onDismissRequest = { navController.popBackStack() },
+            title = { Text("Ingresar PIN") },
+            text = {
+                OutlinedTextField(
+                    value = pin,
+                    onValueChange = { pin = it },
+                    label = { Text("PIN") },
+                    visualTransformation = PasswordVisualTransformation()
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    if (pin == storedPin) {
+                        isAuthenticated = true
+                        showDialog = false
+                        loadHiddenPhotos(context, hiddenPhotos, prefs)
+                    } else {
+                        // Wrong PIN
+                    }
+                }) {
+                    Text("Entrar")
+                }
+            }
+        )
+    } else {
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text("Bóveda Oculta") },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.Filled.PhotoLibrary, contentDescription = "Volver")
+                        }
+                    }
+                )
+            }
+        ) { padding ->
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 120.dp),
+                contentPadding = PaddingValues(8.dp),
+                modifier = Modifier.padding(padding)
+            ) {
+                items(hiddenPhotos) { photo ->
+                    Card(
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .aspectRatio(1f)
+                            .clickable {
+                                // Unhide
+                                hiddenPhotos.remove(photo)
+                                prefs.edit().remove(photo.id.toString()).apply()
+                            },
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(photo.uri),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
-@Composable
-fun EmptyState(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.padding(top = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = stringResource(id = R.string.empty_title),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = stringResource(id = R.string.empty_message),
-            style = MaterialTheme.typography.bodyMedium
-        )
+fun loadPhotos(context: Context, photos: MutableList<PhotoItem>, hiddenPhotos: MutableList<PhotoItem>, prefs: android.content.SharedPreferences) {
+    val projection = arrayOf(MediaStore.Images.Media._ID)
+    val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+    context.contentResolver.query(
+        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+        projection,
+        null,
+        null,
+        sortOrder
+    )?.use { cursor ->
+        val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+        while (cursor.moveToNext()) {
+            val id = cursor.getLong(idColumn)
+            val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+            val photo = PhotoItem(uri, id)
+            photos.add(photo)
+            if (prefs.getBoolean(id.toString(), false)) {
+                hiddenPhotos.add(photo)
+            }
+        }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun GalleryPreview() {
-    MaterialTheme {
-        MultinationalGalleryScreen()
+fun loadHiddenPhotos(context: Context, hiddenPhotos: MutableList<PhotoItem>, prefs: android.content.SharedPreferences) {
+    val projection = arrayOf(MediaStore.Images.Media._ID)
+    context.contentResolver.query(
+        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+        projection,
+        null,
+        null,
+        null
+    )?.use { cursor ->
+        val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+        while (cursor.moveToNext()) {
+            val id = cursor.getLong(idColumn)
+            if (prefs.getBoolean(id.toString(), false)) {
+                val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                hiddenPhotos.add(PhotoItem(uri, id))
+            }
+        }
     }
 }

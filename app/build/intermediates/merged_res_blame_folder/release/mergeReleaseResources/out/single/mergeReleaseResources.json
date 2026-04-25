@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.example.galeryapp-release-43:/xml_data_extraction_rules.xml.flat",
+        "source": "com.example.galeryapp-main-44:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "com.example.galeryapp-release-43:/xml_backup_rules.xml.flat",
+        "source": "com.example.galeryapp-main-44:/xml/backup_rules.xml"
+    }
+]

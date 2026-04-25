@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="all_regions">All regions</string>
+    <string name="app_name">Multinational Gallery</string>
+    <string name="cta_filters">Filter by region and explore iconic places worldwide.</string>
+    <string name="empty_message">Try changing filters or search text.</string>
+    <string name="empty_title">No results</string>
+    <string name="photo_from">Photo from: %1$s</string>
+    <string name="region_africa">Africa</string>
+    <string name="region_americas">Americas</string>
+    <string name="region_asia">Asia</string>
+    <string name="region_europe">Europe</string>
+    <string name="region_oceania">Oceania</string>
+    <string name="search_hint">Search by country or city…</string>
+    <string name="visitors">Yearly visitors: %1$s</string>
+</resources>

@@ -1,0 +1,26 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.example.galeryapp-mergeReleaseResources-41:/values-en/values-en.xml",
+            "map": [
+                {
+                    "source": "/workspaces/Galery-App/app/src/main/res/values-en/strings.xml",
+                    "from": {
+                        "startLines": "3,1,12,11,10,13,7,5,6,4,8,2,9",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "142,16,630,551,500,724,341,243,296,194,390,75,441",
+                        "endColumns": "51,58,93,78,50,55,48,52,44,48,50,66,58",
+                        "endOffsets": "189,70,719,625,546,775,385,291,336,238,436,137,495"
+                    },
+                    "to": {
+                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,107,166,260,339,390,446,495,548,593,642,693,760",
+                        "endColumns": "51,58,93,78,50,55,48,52,44,48,50,66,58",
+                        "endOffsets": "102,161,255,334,385,441,490,543,588,637,688,755,814"
+                    }
+                }
+            ]
+        }
+    ]
+}
