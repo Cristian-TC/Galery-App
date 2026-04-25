@@ -17,6 +17,5 @@ string region_europe
 string region_oceania
 string search_hint
 string visitors
-style Theme.GaleryApp
 xml backup_rules
 xml data_extraction_rules

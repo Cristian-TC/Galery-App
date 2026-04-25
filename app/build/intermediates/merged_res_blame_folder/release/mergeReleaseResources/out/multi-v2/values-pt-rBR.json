@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.galeryapp-mergeReleaseResources-41:/values-pt-rBR/values-pt-rBR.xml",
+            "outputFile": "com.example.galeryapp-mergeReleaseResources-47:/values-pt-rBR/values-pt-rBR.xml",
             "map": [
                 {
                     "source": "/home/codespace/.gradle/caches/9.4.0/transforms/1fc852a39d48b78b02b42452f519beaa/transformed/ui-release/res/values-pt-rBR/values-pt-rBR.xml",

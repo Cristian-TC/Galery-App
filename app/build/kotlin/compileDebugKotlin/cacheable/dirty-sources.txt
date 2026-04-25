@@ -1,2 +1,0 @@
-/workspaces/Galery-App/app/src/main/java/com/example/galeryapp/MainActivity.kt
-/workspaces/Galery-App/app/src/main/java/com/example/galeryapp/ui/theme/Theme.kt

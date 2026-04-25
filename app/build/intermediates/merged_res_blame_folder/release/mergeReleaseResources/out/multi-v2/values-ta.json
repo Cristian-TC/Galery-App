@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.galeryapp-mergeReleaseResources-41:/values-ta/values-ta.xml",
+            "outputFile": "com.example.galeryapp-mergeReleaseResources-47:/values-ta/values-ta.xml",
             "map": [
                 {
                     "source": "/home/codespace/.gradle/caches/9.4.0/transforms/36bfdfded28c333cb395da998ca14363/transformed/core-1.13.1/res/values-ta/values-ta.xml",

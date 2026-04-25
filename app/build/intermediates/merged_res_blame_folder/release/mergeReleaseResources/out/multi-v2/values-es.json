@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.galeryapp-mergeReleaseResources-41:/values-es/values-es.xml",
+            "outputFile": "com.example.galeryapp-mergeReleaseResources-47:/values-es/values-es.xml",
             "map": [
                 {
                     "source": "/home/codespace/.gradle/caches/9.4.0/transforms/f9bfb14425f951fecfd94c1ee52d3e0d/transformed/material3-release/res/values-es/values-es.xml",

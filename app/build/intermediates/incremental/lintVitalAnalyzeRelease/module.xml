@@ -1,0 +1,19 @@
+<lint-module
+    format="1"
+    dir="/workspaces/Galery-App/app"
+    name=":app"
+    type="APP"
+    maven="Galery-App:app:unspecified"
+    agpVersion="8.4.2"
+    buildFolder="build"
+    bootClassPath="/workspaces/Galery-App/android-sdk/platforms/android-34/android.jar:/workspaces/Galery-App/android-sdk/build-tools/34.0.0/core-lambda-stubs.jar"
+    javaSourceLevel="17"
+    compileTarget="android-34"
+    neverShrinking="true">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>

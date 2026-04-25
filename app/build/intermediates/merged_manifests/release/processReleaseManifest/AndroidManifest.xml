@@ -8,7 +8,10 @@
         android:minSdkVersion="24"
         android:targetSdkVersion="34" />
 
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
 
     <permission
         android:name="com.example.galeryapp.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
@@ -23,8 +26,7 @@
         android:extractNativeLibs="false"
         android:fullBackupContent="@xml/backup_rules"
         android:label="@string/app_name"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.GaleryApp" >
+        android:supportsRtl="true" >
         <activity
             android:name="com.example.galeryapp.MainActivity"
             android:exported="true" >

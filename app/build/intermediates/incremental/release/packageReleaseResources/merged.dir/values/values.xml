@@ -17,5 +17,4 @@
     <string name="region_oceania">Oceanía</string>
     <string name="search_hint">Buscar por país o ciudad…</string>
     <string name="visitors">Visitantes al año: %1$s</string>
-    <style name="Theme.GaleryApp" parent="Theme.Material3.DayNight.NoActionBar"/>
 </resources>

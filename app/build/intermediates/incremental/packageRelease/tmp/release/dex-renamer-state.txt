@@ -1,0 +1,7 @@
+#Sat Apr 25 06:48:04 UTC 2026
+base.0=/workspaces/Galery-App/app/build/intermediates/dex/release/mergeDexRelease/classes.dex
+base.1=/workspaces/Galery-App/app/build/intermediates/dex/release/mergeDexRelease/classes2.dex
+path.0=classes.dex
+path.1=classes2.dex
+renamed.0=classes.dex
+renamed.1=classes2.dex

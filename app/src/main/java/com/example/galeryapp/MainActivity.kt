@@ -813,6 +813,8 @@ fun EmptyVaultState(modifier: Modifier = Modifier) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Suppress("EXPERIMENTAL_API_USAGE")
 @Composable
 fun SettingsScreen(navController: NavController) {
     Scaffold(

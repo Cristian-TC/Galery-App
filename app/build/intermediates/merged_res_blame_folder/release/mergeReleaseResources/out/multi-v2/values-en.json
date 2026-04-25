@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.galeryapp-mergeReleaseResources-41:/values-en/values-en.xml",
+            "outputFile": "com.example.galeryapp-mergeReleaseResources-47:/values-en/values-en.xml",
             "map": [
                 {
                     "source": "/workspaces/Galery-App/app/src/main/res/values-en/strings.xml",
