@@ -17,6 +17,7 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -46,7 +47,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -622,6 +623,7 @@ fun NoPhotosState() {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AdvancedPhotoCard(
     photo: PhotoItem,
@@ -744,7 +746,7 @@ fun FullScreenPhotoViewerDialog(
                             .size(46.dp)
                             .background(Color.White.copy(alpha = 0.2f), CircleShape)
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color.White)
+                        Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = Color.White)
                     }
                 }
 
@@ -781,6 +783,7 @@ fun FullScreenPhotoViewerDialog(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionsScreen() {
     val context = LocalContext.current
