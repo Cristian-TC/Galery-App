@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Galerie Multinationale</string>
+    <string name="search_hint">Rechercher par pays ou ville…</string>
+    <string name="all_regions">Toutes les régions</string>
+    <string name="region_europe">Europe</string>
+    <string name="region_americas">Amériques</string>
+    <string name="region_asia">Asie</string>
+    <string name="region_africa">Afrique</string>
+    <string name="region_oceania">Océanie</string>
+    <string name="visitors">Visiteurs par an : %1$s</string>
+    <string name="empty_title">Aucun résultat</string>
+    <string name="empty_message">Essayez d'autres filtres ou une autre recherche.</string>
+    <string name="cta_filters">Filtrez par région et explorez des lieux emblématiques.</string>
+    <string name="photo_from">Photo de : %1$s</string>
+</resources>
