@@ -9,6 +9,14 @@ string app_name
 string cta_filters
 string empty_message
 string empty_title
+string gallery_title
+string nav_collections
+string nav_gallery
+string nav_settings
+string nav_vault
+string permission_cta
+string permission_message
+string permission_title
 string photo_from
 string region_africa
 string region_americas

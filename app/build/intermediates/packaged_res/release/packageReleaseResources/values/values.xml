@@ -9,6 +9,14 @@
     <string name="cta_filters">Filtra por región y explora lugares icónicos del mundo.</string>
     <string name="empty_message">Prueba con otro filtro o una búsqueda distinta.</string>
     <string name="empty_title">Sin resultados</string>
+    <string name="gallery_title">Galería PRO</string>
+    <string name="nav_collections">Colecciones</string>
+    <string name="nav_gallery">Galería</string>
+    <string name="nav_settings">Ajustes</string>
+    <string name="nav_vault">Bóveda</string>
+    <string name="permission_cta">Permitir acceso</string>
+    <string name="permission_message">Activa permisos para indexar, filtrar, organizar y proteger todas tus fotos desde un único lugar.</string>
+    <string name="permission_title">Acceso inteligente a tu galería</string>
     <string name="photo_from">Foto de: %1$s</string>
     <string name="region_africa">África</string>
     <string name="region_americas">Américas</string>

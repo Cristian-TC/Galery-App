@@ -209,6 +209,7 @@ string default_popup_window_title
 string dropdown_menu
 string empty_message
 string empty_title
+string gallery_title
 string in_progress
 string indeterminate
 string m3c_bottom_sheet_collapse_description
@@ -267,10 +268,17 @@ string m3c_time_picker_period_toggle_description
 string m3c_time_picker_pm
 string m3c_tooltip_long_press_label
 string m3c_tooltip_pane_description
+string nav_collections
+string nav_gallery
+string nav_settings
+string nav_vault
 string navigation_menu
 string not_selected
 string off
 string on
+string permission_cta
+string permission_message
+string permission_title
 string photo_from
 string range_end
 string range_start
