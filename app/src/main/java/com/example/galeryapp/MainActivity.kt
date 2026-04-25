@@ -10,17 +10,34 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.*
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.tween
+import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -30,10 +47,59 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Collections
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.HideImage
+import androidx.compose.material.icons.filled.ImageSearch
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ViewList
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +108,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -49,16 +116,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.galeryapp.ui.theme.GaleryAppTheme
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,53 +134,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             GaleryAppTheme {
                 GalleryApp()
-            }
-        }
-    }
-
-    @Composable
-    fun GalleryApp() {
-        val navController = rememberNavController()
-        val context = LocalContext.current
-        val permissionGranted = remember { mutableStateOf(false) }
-        val permissionLauncher = rememberLauncherForActivityResult(
-            ActivityResultContracts.RequestMultiplePermissions()
-        ) { result ->
-            permissionGranted.value = result.values.any { it }
-        }
-
-        LaunchedEffect(Unit) {
-            val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
-            } else {
-                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-            }
-            val granted = permissions.all {
-                ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-            }
-            if (!granted) {
-                permissionLauncher.launch(permissions)
-            } else {
-                permissionGranted.value = true
-            }
-        }
-
-        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            if (!permissionGranted.value) {
-                PermissionScreen(onRequestPermission = {
-                    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
-                    } else {
-                        arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-                    }
-                    permissionLauncher.launch(permissions)
-                })
-            } else {
-                NavHost(navController = navController, startDestination = "gallery") {
-                    composable("gallery") { GalleryMainScreen(navController) }
-                    composable("vault") { VaultScreen(navController) }
-                    composable("settings") { SettingsScreen(navController) }
-                }
             }
         }
     }
@@ -126,12 +147,94 @@ data class PhotoItem(
     val size: Long
 )
 
-enum class SortType {
-    DATE_NEWEST, DATE_OLDEST, NAME_ASC, NAME_DESC
+enum class SortType { DATE_NEWEST, DATE_OLDEST, NAME_ASC, NAME_DESC, SIZE_DESC }
+enum class ViewType { GRID, COMPACT }
+enum class QuickFilter { ALL, FAVORITES, RECENT, LARGE }
+
+enum class MainDestination(
+    val route: String,
+    @StringRes val titleRes: Int,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    Gallery("gallery", R.string.nav_gallery, Icons.Default.PhotoLibrary),
+    Collections("collections", R.string.nav_collections, Icons.Default.Collections),
+    Vault("vault", R.string.nav_vault, Icons.Default.Lock),
+    Settings("settings", R.string.nav_settings, Icons.Default.Settings)
 }
 
-enum class ViewType {
-    GRID, COMPACT
+@Composable
+fun GalleryApp() {
+    val navController = rememberNavController()
+    val context = LocalContext.current
+    var permissionGranted by remember { mutableStateOf(false) }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        permissionGranted = result.values.any { it }
+    }
+
+    LaunchedEffect(Unit) {
+        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
+        } else {
+            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+        val granted = permissions.all {
+            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+        }
+        permissionGranted = granted
+        if (!granted) permissionLauncher.launch(permissions)
+    }
+
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        if (!permissionGranted) {
+            PermissionScreen {
+                val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
+                } else {
+                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+                }
+                permissionLauncher.launch(permissions)
+            }
+        } else {
+            val entry by navController.currentBackStackEntryAsState()
+            val currentRoute = entry?.destination?.route
+            val bottomBarRoutes = MainDestination.entries.map { it.route }
+            Scaffold(
+                bottomBar = {
+                    if (currentRoute in bottomBarRoutes) {
+                        BottomAppBar {
+                            MainDestination.entries.forEach { item ->
+                                NavigationBarItem(
+                                    selected = currentRoute == item.route,
+                                    onClick = {
+                                        navController.navigate(item.route) {
+                                            popUpTo(MainDestination.Gallery.route) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    },
+                                    icon = { Icon(item.icon, contentDescription = null) },
+                                    label = { Text(text = context.getString(item.titleRes), fontSize = 11.sp) }
+                                )
+                            }
+                        }
+                    }
+                }
+            ) { padding ->
+                NavHost(
+                    navController = navController,
+                    startDestination = MainDestination.Gallery.route,
+                    modifier = Modifier.padding(padding)
+                ) {
+                    composable(MainDestination.Gallery.route) { GalleryMainScreen() }
+                    composable(MainDestination.Collections.route) { CollectionsScreen() }
+                    composable(MainDestination.Vault.route) { VaultScreen(navController) }
+                    composable(MainDestination.Settings.route) { SettingsScreen() }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -142,70 +245,65 @@ fun PermissionScreen(onRequestPermission: () -> Unit) {
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.18f),
                         MaterialTheme.colorScheme.background
                     )
                 )
             )
-            .padding(32.dp),
+            .padding(28.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
-            imageVector = Icons.Default.PhotoLibrary,
+            imageVector = Icons.Default.ImageSearch,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier
                 .size(120.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
+                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
                 .padding(24.dp)
         )
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         Text(
-            "Acceso a Galería",
-            style = MaterialTheme.typography.displaySmall,
+            text = stringResource(R.string.permission_title),
+            style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         Text(
-            "Necesitamos permiso para mostrar tus fotos.\nTu privacidad es nuestra prioridad.",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            text = stringResource(R.string.permission_message),
             textAlign = TextAlign.Center,
-            lineHeight = 24.sp
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f)
         )
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(28.dp))
         Button(
             onClick = onRequestPermission,
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            )
+            modifier = Modifier.fillMaxWidth(0.8f).height(52.dp)
         ) {
-            Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.Check, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Permitir acceso", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.permission_cta))
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GalleryMainScreen(navController: NavController) {
+fun GalleryMainScreen() {
     val context = LocalContext.current
+    val prefs = context.getSharedPreferences("gallery_prefs", Context.MODE_PRIVATE)
     val photos = remember { mutableStateListOf<PhotoItem>() }
     val hiddenIds = remember { mutableStateListOf<Long>() }
     val favoriteIds = remember { mutableStateListOf<Long>() }
-    val prefs = context.getSharedPreferences("gallery_prefs", Context.MODE_PRIVATE)
+    val selectedIds = remember { mutableStateListOf<Long>() }
 
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var currentSort by rememberSaveable { mutableStateOf(SortType.DATE_NEWEST) }
     var viewType by rememberSaveable { mutableStateOf(ViewType.GRID) }
+    var quickFilter by rememberSaveable { mutableStateOf(QuickFilter.ALL) }
     var selectedPhoto by remember { mutableStateOf<PhotoItem?>(null) }
     var showSortMenu by remember { mutableStateOf(false) }
 
@@ -213,44 +311,119 @@ fun GalleryMainScreen(navController: NavController) {
         loadAllPhotos(context, photos, hiddenIds, favoriteIds, prefs)
     }
 
-    val filteredAndSortedPhotos = remember(photos, hiddenIds, searchQuery, currentSort) {
+    val visiblePhotos by remember {
+        derivedStateOf { photos.filter { !hiddenIds.contains(it.id) } }
+    }
+    val filteredAndSortedPhotos by remember(
+        photos,
+        hiddenIds,
+        favoriteIds,
+        searchQuery,
+        currentSort,
+        quickFilter
+    ) {
+        derivedStateOf {
         val query = searchQuery.trim().lowercase(Locale.getDefault())
-        val filtered = photos.filter { photo ->
-            val matchesSearch = query.isEmpty() || 
-                photo.displayName.lowercase(Locale.getDefault()).contains(query)
-            val isVisible = !hiddenIds.contains(photo.id)
-            matchesSearch && isVisible
-        }
+        val now = System.currentTimeMillis()
+        val sevenDaysMs = 7L * 24 * 60 * 60 * 1000
 
-        when (currentSort) {
-            SortType.DATE_NEWEST -> filtered.sortedByDescending { it.timestamp }
-            SortType.DATE_OLDEST -> filtered.sortedBy { it.timestamp }
-            SortType.NAME_ASC -> filtered.sortedBy { it.displayName }
-            SortType.NAME_DESC -> filtered.sortedByDescending { it.displayName }
+        visiblePhotos
+            .filter { photo ->
+                val byText = query.isBlank() || photo.displayName.lowercase(Locale.getDefault()).contains(query)
+                val byFilter = when (quickFilter) {
+                    QuickFilter.ALL -> true
+                    QuickFilter.FAVORITES -> favoriteIds.contains(photo.id)
+                    QuickFilter.RECENT -> photo.timestamp > 0L && now - photo.timestamp <= sevenDaysMs
+                    QuickFilter.LARGE -> photo.size > 4_000_000L
+                }
+                byText && byFilter
+            }
+            .let { list ->
+                when (currentSort) {
+                    SortType.DATE_NEWEST -> list.sortedByDescending { it.timestamp }
+                    SortType.DATE_OLDEST -> list.sortedBy { it.timestamp }
+                    SortType.NAME_ASC -> list.sortedBy { it.displayName.lowercase(Locale.getDefault()) }
+                    SortType.NAME_DESC -> list.sortedByDescending { it.displayName.lowercase(Locale.getDefault()) }
+                    SortType.SIZE_DESC -> list.sortedByDescending { it.size }
+                }
+            }
         }
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Galería Profesional",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp
+                        text = if (selectedIds.isEmpty()) stringResource(R.string.gallery_title) else "${selectedIds.size} seleccionadas",
+                        fontWeight = FontWeight.Bold
                     )
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
-                ),
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 actions = {
-                    IconButton(onClick = { navController.navigate("vault") }) {
-                        Icon(Icons.Default.Lock, contentDescription = "Bóveda")
+                    AnimatedVisibility(visible = selectedIds.isEmpty(), enter = fadeIn(), exit = fadeOut()) {
+                        Row {
+                            IconButton(onClick = { showSortMenu = !showSortMenu }) {
+                                Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Ordenar")
+                            }
+                            DropdownMenu(expanded = showSortMenu, onDismissRequest = { showSortMenu = false }) {
+                                SortType.entries.forEach { sort ->
+                                    DropdownMenuItem(
+                                        text = { Text(getSortLabel(sort)) },
+                                        onClick = {
+                                            currentSort = sort
+                                            showSortMenu = false
+                                        }
+                                    )
+                                }
+                            }
+                            IconButton(onClick = {
+                                viewType = if (viewType == ViewType.GRID) ViewType.COMPACT else ViewType.GRID
+                            }) {
+                                Icon(
+                                    imageVector = if (viewType == ViewType.GRID) Icons.Default.ViewList else Icons.Default.GridView,
+                                    contentDescription = null
+                                )
+                            }
+                        }
                     }
-                    IconButton(onClick = { navController.navigate("settings") }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Configuración")
+                    AnimatedVisibility(visible = selectedIds.isNotEmpty(), enter = fadeIn(), exit = fadeOut()) {
+                        Row {
+                            IconButton(onClick = {
+                                selectedIds.forEach { id ->
+                                    if (favoriteIds.contains(id)) {
+                                        favoriteIds.remove(id)
+                                        prefs.edit().remove("favorite_$id").apply()
+                                    } else {
+                                        favoriteIds.add(id)
+                                        prefs.edit().putBoolean("favorite_$id", true).apply()
+                                    }
+                                }
+                            }) {
+                                Icon(Icons.Default.FavoriteBorder, contentDescription = "Favorita")
+                            }
+                            IconButton(onClick = {
+                                val selectedUris = filteredAndSortedPhotos.filter { selectedIds.contains(it.id) }.map { it.uri }
+                                if (selectedUris.isNotEmpty()) {
+                                    sharePhotos(context, selectedUris)
+                                }
+                            }) {
+                                Icon(Icons.Default.Share, contentDescription = "Compartir")
+                            }
+                            IconButton(onClick = {
+                                selectedIds.toList().forEach { id ->
+                                    hiddenIds.add(id)
+                                    prefs.edit().putBoolean(id.toString(), true).apply()
+                                }
+                                photos.removeAll { selectedIds.contains(it.id) }
+                                selectedIds.clear()
+                            }) {
+                                Icon(Icons.Default.HideImage, contentDescription = "Ocultar")
+                            }
+                            IconButton(onClick = { selectedIds.clear() }) {
+                                Icon(Icons.Default.Close, contentDescription = "Cancelar")
+                            }
+                        }
                     }
                 }
             )
@@ -260,79 +433,31 @@ fun GalleryMainScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(MaterialTheme.colorScheme.background)
         ) {
             PremiumSearchBar(searchQuery) { searchQuery = it }
-            
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box {
-                    Button(
-                        onClick = { showSortMenu = !showSortMenu },
-                        modifier = Modifier.height(40.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp)
-                    ) {
-                        Icon(Icons.Default.Sort, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Ordenar", fontSize = 12.sp)
-                    }
-                    DropdownMenu(expanded = showSortMenu, onDismissRequest = { showSortMenu = false }) {
-                        SortType.entries.forEach { sort ->
-                            DropdownMenuItem(
-                                text = { Text(getSortLabel(sort)) },
-                                onClick = { currentSort = sort; showSortMenu = false }
-                            )
-                        }
-                    }
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    IconButton(
-                        onClick = { viewType = ViewType.GRID },
-                        modifier = Modifier.size(40.dp),
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = if (viewType == ViewType.GRID) 
-                                MaterialTheme.colorScheme.primaryContainer else Color.Transparent
-                        )
-                    ) {
-                        Icon(Icons.Default.GridView, contentDescription = null, modifier = Modifier.size(18.dp))
-                    }
-                    IconButton(
-                        onClick = { viewType = ViewType.COMPACT },
-                        modifier = Modifier.size(40.dp),
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = if (viewType == ViewType.COMPACT) 
-                                MaterialTheme.colorScheme.primaryContainer else Color.Transparent
-                        )
-                    ) {
-                        Icon(Icons.Default.ViewList, contentDescription = null, modifier = Modifier.size(18.dp))
-                    }
-                }
-            }
-
-            StatsRow(filteredAndSortedPhotos.size, favoriteIds.size)
+            DashboardSummary(
+                totalPhotos = visiblePhotos.size,
+                favorites = favoriteIds.count { id -> visiblePhotos.any { it.id == id } },
+                hidden = hiddenIds.size,
+                totalSizeBytes = visiblePhotos.sumOf { it.size }
+            )
+            QuickFilterChips(current = quickFilter, onSelect = { quickFilter = it })
 
             if (filteredAndSortedPhotos.isEmpty()) {
                 NoPhotosState()
             } else {
                 LazyVerticalGrid(
-                    columns = GridCells.Adaptive(
-                        minSize = if (viewType == ViewType.GRID) 140.dp else 120.dp
-                    ),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    columns = GridCells.Adaptive(if (viewType == ViewType.GRID) 138.dp else 112.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(filteredAndSortedPhotos, key = { it.id }) { photo ->
                         AdvancedPhotoCard(
                             photo = photo,
                             isFavorite = favoriteIds.contains(photo.id),
+                            isSelected = selectedIds.contains(photo.id),
                             onFavoriteToggle = {
                                 if (favoriteIds.contains(photo.id)) {
                                     favoriteIds.remove(photo.id)
@@ -347,7 +472,16 @@ fun GalleryMainScreen(navController: NavController) {
                                 prefs.edit().putBoolean(photo.id.toString(), true).apply()
                                 photos.remove(photo)
                             },
-                            onOpen = { selectedPhoto = photo }
+                            onClick = {
+                                if (selectedIds.isNotEmpty()) {
+                                    toggleSelection(selectedIds, photo.id)
+                                } else {
+                                    selectedPhoto = photo
+                                }
+                            },
+                            onLongClick = {
+                                toggleSelection(selectedIds, photo.id)
+                            }
                         )
                     }
                 }
@@ -374,6 +508,10 @@ fun GalleryMainScreen(navController: NavController) {
     }
 }
 
+private fun toggleSelection(selectedIds: MutableList<Long>, id: Long) {
+    if (selectedIds.contains(id)) selectedIds.remove(id) else selectedIds.add(id)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PremiumSearchBar(query: String, onQueryChanged: (String) -> Unit) {
@@ -382,60 +520,75 @@ fun PremiumSearchBar(query: String, onQueryChanged: (String) -> Unit) {
         onValueChange = onQueryChanged,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .height(56.dp),
-        placeholder = { Text("Buscar fotos...") },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.outlineVariant) },
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        placeholder = { Text("Buscar por nombre...") },
+        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
         trailingIcon = if (query.isNotEmpty()) {
-            { 
+            {
                 IconButton(onClick = { onQueryChanged("") }) {
-                    Icon(Icons.Default.Close, contentDescription = "Limpiar", tint = MaterialTheme.colorScheme.outlineVariant)
+                    Icon(Icons.Default.Close, contentDescription = "Limpiar")
                 }
             }
         } else null,
         singleLine = true,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = TextFieldDefaults.outlinedTextFieldColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = Color.Transparent
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
         )
     )
 }
 
 @Composable
-fun StatsRow(totalPhotos: Int, favoriteCount: Int) {
-    Row(
+fun DashboardSummary(totalPhotos: Int, favorites: Int, hidden: Int, totalSizeBytes: Long) {
+    val estimatedGb = totalSizeBytes.toDouble() / (1024 * 1024 * 1024)
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-            .background(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(12.dp)
-            )
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
+            .padding(horizontal = 16.dp)
+            .shadow(4.dp, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        StatItem("Fotos", totalPhotos.toString(), Icons.Default.PhotoLibrary)
-        Divider(modifier = Modifier.width(1.dp).height(40.dp), color = MaterialTheme.colorScheme.outlineVariant)
-        StatItem("Favoritas", favoriteCount.toString(), Icons.Default.Favorite)
+        Column(modifier = Modifier.padding(14.dp)) {
+            Text("Panel inteligente", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                SummaryMetric("Fotos", totalPhotos.toString())
+                SummaryMetric("Favoritas", favorites.toString())
+                SummaryMetric("Ocultas", hidden.toString())
+                SummaryMetric("GB", String.format(Locale.US, "%.1f", estimatedGb))
+            }
+        }
     }
 }
 
 @Composable
-fun StatItem(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+fun SummaryMetric(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                value,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.primary
+        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+fun QuickFilterChips(current: QuickFilter, onSelect: (QuickFilter) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        QuickFilter.entries.forEach { filter ->
+            val selected = current == filter
+            AssistChip(
+                onClick = { onSelect(filter) },
+                label = { Text(text = getFilterLabel(filter)) },
+                colors = if (selected) AssistChipDefaults.assistChipColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ) else AssistChipDefaults.assistChipColors()
             )
         }
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -444,32 +597,26 @@ fun NoPhotosState() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp)
-            .verticalScroll(rememberScrollState()),
+            .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
-            Icons.Default.PhotoLibrary,
+            imageVector = Icons.Default.PhotoLibrary,
             contentDescription = null,
             modifier = Modifier
-                .size(100.dp)
+                .size(96.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
-                .padding(24.dp),
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f))
+                .padding(20.dp),
+            tint = MaterialTheme.colorScheme.primary
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Sin fotos para mostrar", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
-            "Sin fotos",
-            style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            "Tus fotos aparecerán aquí",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+            "Ajusta tus filtros, revisa la bóveda o agrega nuevas imágenes al dispositivo.",
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
             textAlign = TextAlign.Center
         )
     }
@@ -479,18 +626,23 @@ fun NoPhotosState() {
 fun AdvancedPhotoCard(
     photo: PhotoItem,
     isFavorite: Boolean,
+    isSelected: Boolean,
     onFavoriteToggle: () -> Unit,
     onHide: () -> Unit,
-    onOpen: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { onOpen() }
-            .shadow(elevation = 4.dp, shape = RoundedCornerShape(12.dp)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 8.dp else 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.32f)
+            else MaterialTheme.colorScheme.surface
+        )
     ) {
-        Box(modifier = Modifier.aspectRatio(1f)) {
+        Box(modifier = Modifier.height(168.dp)) {
             Image(
                 painter = rememberAsyncImagePainter(photo.uri),
                 contentDescription = photo.displayName,
@@ -503,11 +655,8 @@ fun AdvancedPhotoCard(
                     .fillMaxSize()
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.3f)
-                            ),
-                            startY = 200f
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.35f)),
+                            startY = 120f
                         )
                     )
             )
@@ -515,51 +664,49 @@ fun AdvancedPhotoCard(
             Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    .padding(6.dp)
             ) {
                 IconButton(
                     onClick = onFavoriteToggle,
                     modifier = Modifier
-                        .size(36.dp)
-                        .background(
-                            Color.Black.copy(alpha = 0.4f),
-                            shape = CircleShape
-                        ),
+                        .size(34.dp)
+                        .background(Color.Black.copy(alpha = 0.35f), CircleShape),
                     colors = IconButtonDefaults.iconButtonColors(
                         contentColor = if (isFavorite) Color(0xFFFF6B6B) else Color.White
                     )
                 ) {
-                    Icon(
-                        if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Icon(if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder, contentDescription = null)
                 }
+                Spacer(modifier = Modifier.width(4.dp))
                 IconButton(
                     onClick = onHide,
                     modifier = Modifier
-                        .size(36.dp)
-                        .background(
-                            Color.Black.copy(alpha = 0.4f),
-                            shape = CircleShape
-                        ),
+                        .size(34.dp)
+                        .background(Color.Black.copy(alpha = 0.35f), CircleShape),
                     colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
                 ) {
-                    Icon(Icons.Default.MoreVert, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.MoreVert, contentDescription = null)
                 }
             }
 
-            Text(
-                photo.displayName,
+            Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(8.dp),
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.White,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+                    .padding(8.dp)
+            ) {
+                Text(
+                    photo.displayName,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    "${formatPhotoDate(photo.timestamp)} • ${formatFileSize(photo.size)}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.White.copy(alpha = 0.85f)
+                )
+            }
         }
     }
 }
@@ -576,124 +723,115 @@ fun FullScreenPhotoViewerDialog(
         onDismissRequest = onClose,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black),
-            shape = RoundedCornerShape(0.dp)
-        ) {
+        Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Image(
                     painter = rememberAsyncImagePainter(photo.uri),
                     contentDescription = photo.displayName,
                     contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                Row(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black)
-                )
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    IconButton(
+                        onClick = onClose,
+                        modifier = Modifier
+                            .size(46.dp)
+                            .background(Color.White.copy(alpha = 0.2f), CircleShape)
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color.White)
+                    }
+                }
 
-                TopBar(onClose = onClose)
-
-                BottomActionBar(
-                    photo = photo,
-                    isFavorite = isFavorite,
-                    onFavoriteToggle = onFavoriteToggle,
-                    onShare = onShare
-                )
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.74f))
+                            )
+                        )
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    IconButton(onClick = onFavoriteToggle) {
+                        Icon(
+                            if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = null,
+                            tint = if (isFavorite) Color(0xFFFF6B6B) else Color.White
+                        )
+                    }
+                    IconButton(onClick = onShare) {
+                        Icon(Icons.Default.Share, contentDescription = null, tint = Color.White)
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(photo.displayName, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1)
+                        Text(formatPhotoDate(photo.timestamp), color = Color.White.copy(alpha = 0.75f), style = MaterialTheme.typography.labelMedium)
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun TopBar(onClose: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(
-            onClick = onClose,
-            modifier = Modifier
-                .size(48.dp)
-                .background(
-                    Color.White.copy(alpha = 0.2f),
-                    shape = CircleShape
-                )
-        ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Cerrar", tint = Color.White, modifier = Modifier.size(24.dp))
-        }
+fun CollectionsScreen() {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("gallery_prefs", Context.MODE_PRIVATE)
+    val photos = remember { mutableStateListOf<PhotoItem>() }
+    val hiddenIds = remember { mutableStateListOf<Long>() }
+    val favorites = remember { mutableStateListOf<Long>() }
+
+    LaunchedEffect(Unit) {
+        loadAllPhotos(context, photos, hiddenIds, favorites, prefs)
     }
-}
 
-@Composable
-fun BottomActionBar(
-    photo: PhotoItem,
-    isFavorite: Boolean,
-    onFavoriteToggle: () -> Unit,
-    onShare: () -> Unit
-) {
-    Box(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
-                    )
-                )
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+    val grouped = photos
+        .filter { !hiddenIds.contains(it.id) }
+        .groupBy { groupPhotoByMonth(it.timestamp) }
+        .toList()
+
+    Scaffold(topBar = {
+        CenterAlignedTopAppBar(title = { Text("Colecciones", fontWeight = FontWeight.Bold) })
+    }) { padding ->
+        if (grouped.isEmpty()) {
+            NoPhotosState()
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentPadding = PaddingValues(14.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                IconButton(
-                    onClick = onFavoriteToggle,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            Color.White.copy(alpha = 0.2f),
-                            shape = CircleShape
-                        )
-                ) {
-                    Icon(
-                        if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = null,
-                        tint = if (isFavorite) Color(0xFFFF6B6B) else Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-
-                IconButton(
-                    onClick = onShare,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            Color.White.copy(alpha = 0.2f),
-                            shape = CircleShape
-                        )
-                ) {
-                    Icon(Icons.Default.Share, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
-                }
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        photo.displayName,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.White,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        "Agregado: ${formatPhotoDate(photo.timestamp)}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(alpha = 0.7f)
-                    )
+                items(grouped) { (label, photosInGroup) ->
+                    Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                items(photosInGroup.take(12), key = { it.id }) { item ->
+                                    Image(
+                                        painter = rememberAsyncImagePainter(item.uri),
+                                        contentDescription = item.displayName,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(112.dp)
+                                            .clip(RoundedCornerShape(12.dp))
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("${photosInGroup.size} fotos", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
                 }
             }
         }
@@ -713,57 +851,57 @@ fun VaultScreen(navController: NavController) {
     var attemptCount by remember { mutableStateOf(0) }
 
     LaunchedEffect(isAuthenticated) {
-        if (isAuthenticated) {
-            loadHiddenPhotosForVault(context, hiddenPhotos, prefs)
-        }
+        if (isAuthenticated) loadHiddenPhotosForVault(context, hiddenPhotos, prefs)
     }
 
     if (storedPin == null && !isAuthenticated) {
-        PinSetupDialog(pin, { pin = it }, {
-            if (pin.length >= 4) {
-                prefs.edit().putString("pin", pin).apply()
-                isAuthenticated = true
-            } else {
-                errorMessage = "El PIN debe tener al menos 4 dígitos"
-            }
-        }, { navController.popBackStack() }, errorMessage)
+        PinSetupDialog(
+            pin = pin,
+            onPinChange = { pin = it },
+            onSave = {
+                if (pin.length in 4..6) {
+                    prefs.edit().putString("pin", pin).apply()
+                    isAuthenticated = true
+                } else {
+                    errorMessage = "El PIN debe tener entre 4 y 6 dígitos"
+                }
+            },
+            onCancel = { navController.navigate(MainDestination.Gallery.route) },
+            errorMessage = errorMessage
+        )
         return
     }
 
     if (storedPin != null && !isAuthenticated) {
-        PinLoginDialog(pin, { pin = it }, {
-            if (pin == storedPin) {
-                isAuthenticated = true
-                attemptCount = 0
-            } else {
-                attemptCount++
-                errorMessage = if (attemptCount >= 3) "Muy muchos intentos. Intenta más tarde." else "PIN incorrecto"
-            }
-        }, { navController.popBackStack() }, errorMessage, attemptCount < 3)
+        PinLoginDialog(
+            pin = pin,
+            onPinChange = { pin = it },
+            onLogin = {
+                if (pin == storedPin) {
+                    isAuthenticated = true
+                    errorMessage = ""
+                    attemptCount = 0
+                } else {
+                    attemptCount++
+                    errorMessage = if (attemptCount >= 3) "Demasiados intentos. Reinicia la app." else "PIN incorrecto"
+                }
+            },
+            onCancel = { navController.navigate(MainDestination.Gallery.route) },
+            errorMessage = errorMessage,
+            isEnabled = attemptCount < 3
+        )
         return
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Bóveda Segura", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        }
-    ) { padding ->
+    Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text("Bóveda Segura") }) }) { padding ->
         if (hiddenPhotos.isEmpty()) {
             EmptyVaultState(modifier = Modifier.padding(padding))
         } else {
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 140.dp),
-                contentPadding = PaddingValues(16.dp),
+                columns = GridCells.Adaptive(minSize = 130.dp),
+                contentPadding = PaddingValues(14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
@@ -771,12 +909,11 @@ fun VaultScreen(navController: NavController) {
                 items(hiddenPhotos, key = { it.id }) { photo ->
                     Card(
                         modifier = Modifier
-                            .aspectRatio(1f)
+                            .height(145.dp)
                             .clickable {
                                 hiddenPhotos.remove(photo)
                                 prefs.edit().remove(photo.id.toString()).apply()
-                            },
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                            }
                     ) {
                         Image(
                             painter = rememberAsyncImagePainter(photo.uri),
@@ -800,65 +937,71 @@ fun EmptyVaultState(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            Icons.Default.Lock,
-            contentDescription = null,
-            modifier = Modifier.size(100.dp),
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-        )
-        Spacer(modifier = Modifier.height(24.dp))
+        Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(80.dp), tint = MaterialTheme.colorScheme.primary)
+        Spacer(modifier = Modifier.height(16.dp))
         Text("Bóveda vacía", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text("Oculta tus fotos privadas aquí", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
+        Text("Mantén pulsada una foto en la galería y toca ocultar.", color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
-fun SettingsScreen(navController: NavController) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Configuración", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
-                    }
-                }
-            )
-        }
-    ) { padding ->
+fun SettingsScreen() {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("gallery_prefs", Context.MODE_PRIVATE)
+    var pinReset by remember { mutableStateOf(false) }
+
+    Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text("Configuración") }) }) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
                 .verticalScroll(rememberScrollState())
+                .padding(16.dp)
         ) {
-            Text("Aplicación", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 12.dp))
+            Text("General", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             ListItem(
                 headlineContent = { Text("Versión") },
-                supportingContent = { Text("1.0.0") },
+                supportingContent = { Text("2.0.0 PRO") },
                 leadingContent = { Icon(Icons.Default.Info, contentDescription = null) }
             )
             ListItem(
-                headlineContent = { Text("Galería Profesional") },
-                supportingContent = { Text("Tu aplicación de fotos segura") },
-                leadingContent = { Icon(Icons.Default.PhotoLibrary, contentDescription = null) }
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-            Text("Sobre", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 12.dp))
-            ListItem(
-                headlineContent = { Text("Privacidad") },
-                supportingContent = { Text("Tus fotos son tuyas") },
-                leadingContent = { Icon(Icons.Default.Lock, contentDescription = null) }
-            )
-            ListItem(
                 headlineContent = { Text("Seguridad") },
-                supportingContent = { Text("PIN protegido") },
+                supportingContent = { Text("Bóveda protegida con PIN") },
                 leadingContent = { Icon(Icons.Default.Security, contentDescription = null) }
             )
+            HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
+            Text("Gestión", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            FilledTonalButton(onClick = { pinReset = true }, modifier = Modifier.fillMaxWidth()) {
+                Text("Restablecer PIN de bóveda")
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "Este reinicio solo borra el PIN local. Tus fotos no se eliminan.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
+    }
+
+    if (pinReset) {
+        AlertDialog(
+            onDismissRequest = { pinReset = false },
+            title = { Text("¿Restablecer PIN?") },
+            text = { Text("Se solicitará un nuevo PIN la próxima vez que abras la bóveda.") },
+            confirmButton = {
+                Button(onClick = {
+                    prefs.edit().remove("pin").apply()
+                    pinReset = false
+                }) {
+                    Text("Restablecer")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pinReset = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 
@@ -872,20 +1015,19 @@ fun PinSetupDialog(
 ) {
     AlertDialog(
         onDismissRequest = onCancel,
-        title = { Text("Configura tu PIN", fontWeight = FontWeight.Bold) },
+        title = { Text("Configura tu PIN") },
         text = {
             Column {
                 OutlinedTextField(
                     value = pin,
-                    onValueChange = { onPinChange(it.filter { c -> c.isDigit() }.take(6)) },
+                    onValueChange = { onPinChange(it.filter(Char::isDigit).take(6)) },
                     label = { Text("PIN (4-6 dígitos)") },
                     visualTransformation = PasswordVisualTransformation(),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    singleLine = true
                 )
                 if (errorMessage.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(errorMessage, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(errorMessage, color = MaterialTheme.colorScheme.error)
                 }
             }
         },
@@ -905,21 +1047,20 @@ fun PinLoginDialog(
 ) {
     AlertDialog(
         onDismissRequest = onCancel,
-        title = { Text("Bóveda Segura", fontWeight = FontWeight.Bold) },
+        title = { Text("Bóveda Segura") },
         text = {
             Column {
                 OutlinedTextField(
                     value = pin,
-                    onValueChange = { onPinChange(it.filter { c -> c.isDigit() }.take(6)) },
+                    onValueChange = { onPinChange(it.filter(Char::isDigit).take(6)) },
                     label = { Text("Ingresa tu PIN") },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
-                    enabled = isEnabled,
-                    modifier = Modifier.fillMaxWidth()
+                    enabled = isEnabled
                 )
                 if (errorMessage.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(errorMessage, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(errorMessage, color = MaterialTheme.colorScheme.error)
                 }
             }
         },
@@ -964,9 +1105,7 @@ fun loadAllPhotos(
             val timestamp = cursor.getLong(dateColumn).takeIf { it > 0 } ?: 0L
             val size = cursor.getLong(sizeColumn)
             val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-
-            val photo = PhotoItem(uri, id, name, timestamp, size)
-            photos.add(photo)
+            photos.add(PhotoItem(uri, id, name, timestamp, size))
 
             if (prefs.getBoolean(id.toString(), false)) hiddenIds.add(id)
             if (prefs.getBoolean("favorite_$id", false)) favoriteIds.add(id)
@@ -1021,11 +1160,30 @@ fun sharePhoto(context: Context, uri: Uri) {
     context.startActivity(Intent.createChooser(shareIntent, "Compartir foto"))
 }
 
-fun formatPhotoDate(timestamp: Long): String {
-    return if (timestamp > 0L) {
-        SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(timestamp))
-    } else {
-        "Fecha desconocida"
+fun sharePhotos(context: Context, uris: List<Uri>) {
+    val shareIntent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+        type = "image/*"
+        putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    context.startActivity(Intent.createChooser(shareIntent, "Compartir fotos"))
+}
+
+fun formatPhotoDate(timestamp: Long): String =
+    if (timestamp > 0L) SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(timestamp)) else "Sin fecha"
+
+fun formatFileSize(size: Long): String = when {
+    size <= 0L -> "0 B"
+    size < 1024L -> "$size B"
+    size < 1024L * 1024L -> String.format(Locale.US, "%.1f KB", size / 1024.0)
+    size < 1024L * 1024L * 1024L -> String.format(Locale.US, "%.1f MB", size / (1024.0 * 1024.0))
+    else -> String.format(Locale.US, "%.2f GB", size / (1024.0 * 1024.0 * 1024.0))
+}
+
+fun groupPhotoByMonth(timestamp: Long): String {
+    if (timestamp <= 0L) return "Sin fecha"
+    return SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date(timestamp)).replaceFirstChar {
+        if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
     }
 }
 
@@ -1034,4 +1192,12 @@ fun getSortLabel(sort: SortType): String = when (sort) {
     SortType.DATE_OLDEST -> "📅 Más antiguas"
     SortType.NAME_ASC -> "🔤 Nombre (A-Z)"
     SortType.NAME_DESC -> "🔤 Nombre (Z-A)"
+    SortType.SIZE_DESC -> "📦 Más pesadas"
+}
+
+fun getFilterLabel(filter: QuickFilter): String = when (filter) {
+    QuickFilter.ALL -> "Todas"
+    QuickFilter.FAVORITES -> "Favoritas"
+    QuickFilter.RECENT -> "Últimos 7 días"
+    QuickFilter.LARGE -> "Archivos grandes"
 }
